@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Infrastructure Services (always run these)
+  # =============================================================================
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: vantage-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vantage}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-vantage}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vantage-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: vantage-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+    networks:
+      - vantage-network
+
+  # =============================================================================
+  # Application Services (optional, use profiles)
+  # =============================================================================
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: vantage-api
+    profiles:
+      - full
+      - api
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vantage}
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vantage-network
+    volumes:
+      - ./apps/api/src:/app/src:ro
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: vantage-web
+    profiles:
+      - full
+      - web
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+      - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN:-}
+      - NEXT_PUBLIC_LOG_LEVEL=${NEXT_PUBLIC_LOG_LEVEL:-info}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - vantage-network
+    volumes:
+      - ./apps/web/app:/app/app:ro
+      - ./apps/web/lib:/app/lib:ro
+      - ./apps/web/components:/app/components:ro
+
+networks:
+  vantage-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
