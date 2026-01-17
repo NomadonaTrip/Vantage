@@ -1,0 +1,41 @@
+name: "Vantage CodeQL Configuration"
+
+# Use security-extended queries for comprehensive scanning
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+# Paths to exclude from analysis
+paths-ignore:
+  - node_modules
+  - "**/node_modules"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.ts"
+  - "**/tests/**"
+  - "**/test/**"
+  - "**/__tests__/**"
+  - "apps/api/alembic/versions/**"
+  - "apps/api/tests/**"
+  - "**/fixtures/**"
+  - "**/mocks/**"
+  - "**/*.d.ts"
+  - "coverage/**"
+  - "dist/**"
+  - "build/**"
+  - ".next/**"
+
+# Query filters to reduce noise
+query-filters:
+  # Exclude low-value findings
+  - exclude:
+      id: js/unused-local-variable
+  - exclude:
+      id: py/unused-local-variable
+  - exclude:
+      id: js/useless-expression
+  - exclude:
+      id: py/empty-except
+
+# Trap caching for faster analysis
+trap-caching: true

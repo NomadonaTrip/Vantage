@@ -1,0 +1,136 @@
+# Pre-commit hooks configuration for Vantage
+# Install: pip install pre-commit && pre-commit install
+# Run all: pre-commit run --all-files
+# Update: pre-commit autoupdate
+
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  # =============================================================================
+  # General Hooks
+  # =============================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(pnpm-lock\.yaml|poetry\.lock)$
+      - id: end-of-file-fixer
+        exclude: ^(pnpm-lock\.yaml|poetry\.lock)$
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: detect-private-key
+      - id: no-commit-to-branch
+        args: ['--branch', 'main']
+
+  # =============================================================================
+  # Secrets Detection
+  # =============================================================================
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: |
+          (?x)^(
+            pnpm-lock\.yaml|
+            poetry\.lock|
+            package-lock\.json|
+            .*\.test\.[tj]sx?$|
+            .*\.spec\.[tj]sx?$
+          )$
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.1
+    hooks:
+      - id: gitleaks
+
+  # =============================================================================
+  # Python Hooks
+  # =============================================================================
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.11
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        types_or: [python, pyi]
+        files: ^apps/api/
+      - id: ruff-format
+        types_or: [python, pyi]
+        files: ^apps/api/
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.7
+    hooks:
+      - id: bandit
+        args: ["-c", "apps/api/pyproject.toml", "-r"]
+        files: ^apps/api/src/
+        exclude: ^apps/api/(tests|alembic)/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        files: ^apps/api/src/
+        args: [--ignore-missing-imports]
+        additional_dependencies:
+          - pydantic
+          - fastapi
+          - types-redis
+
+  # =============================================================================
+  # JavaScript/TypeScript Hooks
+  # =============================================================================
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint
+        entry: pnpm --filter web lint --fix
+        language: system
+        files: ^apps/web/.*\.[tj]sx?$
+        pass_filenames: false
+
+      - id: prettier
+        name: Prettier
+        entry: pnpm prettier --write
+        language: system
+        files: \.(ts|tsx|js|jsx|json|css|md)$
+        exclude: ^(pnpm-lock\.yaml|apps/api/)
+
+      - id: typecheck
+        name: TypeScript
+        entry: pnpm --filter web typecheck
+        language: system
+        files: ^apps/web/.*\.tsx?$
+        pass_filenames: false
+
+  # =============================================================================
+  # Commit Message
+  # =============================================================================
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  # =============================================================================
+  # Documentation
+  # =============================================================================
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        args: [--fix, --disable, MD013, MD033, MD041]
+        exclude: ^(CHANGELOG\.md|node_modules/)
+
+# CI configuration
+ci:
+  autofix_prs: true
+  autofix_commit_msg: 'style: auto-fix by pre-commit hooks'
+  autoupdate_branch: develop
+  autoupdate_commit_msg: 'chore: update pre-commit hooks'
+  skip: [eslint, prettier, typecheck]  # These require node_modules
