@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.middleware.logging import LoggingMiddleware
-from src.api.routes import auth, conversations, health
+from src.api.routes import auth, client_profiles, conversations, health
 from src.core.sentry import init_sentry
 from src.utils.logging import get_logger, setup_logging
 
@@ -56,6 +56,7 @@ app.add_middleware(LoggingMiddleware)
 app.include_router(health.router)
 app.include_router(auth.router, prefix="/v1")
 app.include_router(conversations.router, prefix="/v1")
+app.include_router(client_profiles.router, prefix="/v1")
 
 
 @app.get("/")
