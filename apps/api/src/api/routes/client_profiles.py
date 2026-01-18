@@ -8,11 +8,17 @@ from supabase import Client
 from src.api.middleware.auth import CurrentUser
 from src.core.supabase import get_supabase_client
 from src.repositories.client_profile import ClientProfileRepository
+from src.repositories.conversation import ConversationRepository
 from src.schemas.client_profile import (
     ClientProfileCreate,
     ClientProfileListResponse,
     ClientProfileResponse,
     ClientProfileUpdate,
+)
+from src.schemas.conversation import (
+    ConversationDetailResponse,
+    ConversationListResponse,
+    ConversationSummaryResponse,
 )
 from src.utils.logging import get_logger
 
@@ -26,6 +32,13 @@ def get_client_profile_repository(
 ) -> ClientProfileRepository:
     """Get client profile repository instance."""
     return ClientProfileRepository(supabase)
+
+
+def get_conversation_repository(
+    supabase: Annotated[Client, Depends(get_supabase_client)],
+) -> ConversationRepository:
+    """Get conversation repository instance."""
+    return ConversationRepository(supabase)
 
 
 @router.get("", response_model=ClientProfileListResponse)
@@ -311,4 +324,123 @@ async def get_active_client_profile(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get active client profile",
+        ) from e
+
+
+@router.get("/{profile_id}/conversations", response_model=ConversationListResponse)
+async def list_profile_conversations(
+    profile_id: str,
+    user: CurrentUser,
+    profile_repo: Annotated[ClientProfileRepository, Depends(get_client_profile_repository)],
+    conversation_repo: Annotated[ConversationRepository, Depends(get_conversation_repository)],
+) -> ConversationListResponse:
+    """
+    List all conversations for a client profile.
+
+    Only returns conversations for profiles owned by the authenticated user.
+    """
+    logger.info("list_profile_conversations_request", profile_id=profile_id, user_id=user.id)
+
+    try:
+        # Verify profile ownership
+        profile = await profile_repo.get_by_id(profile_id, user.id)
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Client profile not found",
+            )
+
+        # Get conversations
+        conversations = await conversation_repo.list_by_profile(profile_id, user.id)
+
+        return ConversationListResponse(
+            conversations=[
+                ConversationSummaryResponse(
+                    id=c.id,
+                    status=c.status,
+                    message_count=len(c.messages),
+                    extracted_profile=c.extracted_profile,
+                    started_at=c.started_at,
+                    completed_at=c.completed_at,
+                )
+                for c in conversations
+            ],
+            total=len(conversations),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("list_profile_conversations_failed", profile_id=profile_id, error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to list conversations",
+        ) from e
+
+
+@router.get("/{profile_id}/conversations/{conversation_id}", response_model=ConversationDetailResponse)
+async def get_profile_conversation(
+    profile_id: str,
+    conversation_id: str,
+    user: CurrentUser,
+    profile_repo: Annotated[ClientProfileRepository, Depends(get_client_profile_repository)],
+    conversation_repo: Annotated[ConversationRepository, Depends(get_conversation_repository)],
+) -> ConversationDetailResponse:
+    """
+    Get detailed conversation history.
+
+    Only returns conversations for profiles owned by the authenticated user.
+    """
+    logger.info(
+        "get_profile_conversation_request",
+        profile_id=profile_id,
+        conversation_id=conversation_id,
+        user_id=user.id,
+    )
+
+    try:
+        # Verify profile ownership
+        profile = await profile_repo.get_by_id(profile_id, user.id)
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Client profile not found",
+            )
+
+        # Get conversation
+        conversation = await conversation_repo.get_by_id(conversation_id)
+        if not conversation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found",
+            )
+
+        # Verify conversation belongs to this profile
+        if conversation.client_profile_id != profile_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found",
+            )
+
+        return ConversationDetailResponse(
+            id=conversation.id,
+            user_id=conversation.user_id,
+            client_profile_id=conversation.client_profile_id,
+            status=conversation.status,
+            messages=conversation.messages,
+            extracted_profile=conversation.extracted_profile,
+            started_at=conversation.started_at,
+            completed_at=conversation.completed_at,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(
+            "get_profile_conversation_failed",
+            profile_id=profile_id,
+            conversation_id=conversation_id,
+            error=str(e),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get conversation",
         ) from e

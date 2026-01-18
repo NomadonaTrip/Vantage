@@ -107,3 +107,34 @@ class ConvertResponse(BaseModel):
     services: list[str]
     additional_context: str | None
     conversation_status: ConversationStatus
+
+
+class ConversationDetailResponse(BaseModel):
+    """Detailed response for a single conversation."""
+
+    id: str
+    user_id: str | None
+    client_profile_id: str | None
+    status: ConversationStatus
+    messages: list[ConversationMessage]
+    extracted_profile: ExtractedProfile | None
+    started_at: datetime
+    completed_at: datetime | None
+
+
+class ConversationSummaryResponse(BaseModel):
+    """Summary response for conversation list."""
+
+    id: str
+    status: ConversationStatus
+    message_count: int
+    extracted_profile: ExtractedProfile | None
+    started_at: datetime
+    completed_at: datetime | None
+
+
+class ConversationListResponse(BaseModel):
+    """Response for listing conversations."""
+
+    conversations: list[ConversationSummaryResponse]
+    total: int

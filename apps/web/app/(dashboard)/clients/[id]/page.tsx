@@ -17,6 +17,7 @@ import {
 } from '@/stores/client-store';
 import { ClientDetail } from '@/components/client/client-detail';
 import { ClientForm } from '@/components/client/client-form';
+import { ConversationHistory } from '@/components/client/conversation-history';
 import { logger } from '@/lib/logger';
 
 interface PageProps {
@@ -180,12 +181,19 @@ export default function ClientDetailPage({ params }: PageProps) {
           </div>
         </div>
       ) : (
-        <ClientDetail
-          profile={profile}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onActivate={handleActivate}
-        />
+        <div className="space-y-8">
+          <ClientDetail
+            profile={profile}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onActivate={handleActivate}
+          />
+
+          {/* Conversation History */}
+          <div className="bg-white shadow rounded-lg p-6">
+            <ConversationHistory profileId={params.id} />
+          </div>
+        </div>
       )}
 
       {/* Delete Confirmation Modal */}
