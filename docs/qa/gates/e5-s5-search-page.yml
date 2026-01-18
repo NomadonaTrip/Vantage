@@ -1,0 +1,114 @@
+# QA Gate: E5-S5 Search Page Frontend
+# Generated: 2026-01-18
+# Reviewer: Quinn (QA Agent)
+
+story:
+  id: E5-S5
+  title: Search Page Frontend
+  file: docs/stories/epic-5/5.5.search-page.md
+
+gate_decision: PASS
+confidence: HIGH
+risk_level: LOW
+
+acceptance_criteria:
+  AC1:
+    description: Search page displays at /search route
+    status: PASS
+    evidence: |
+      - apps/web/app/(dashboard)/search/page.tsx created
+      - Build output shows /search route registered
+      - Dashboard layout already has /search nav link
+
+  AC2:
+    description: User can initiate search using active client profile context
+    status: PASS
+    evidence: |
+      - SearchHeader displays activeProfile context
+      - startSearch uses activeProfile.id
+      - Redirects to /clients if no active profile
+
+  AC3:
+    description: Manual override panel allows specifying custom search parameters
+    status: PASS
+    evidence: |
+      - ManualOverride component with collapsible panel
+      - Keywords, location, industry, company size, budget range fields
+      - Supplement/Replace mode toggle
+
+  AC4:
+    description: Progress shows sources being queried and leads found (via polling)
+    status: PASS
+    evidence: |
+      - SearchProgress component displays sources with status icons
+      - Leads found counter
+      - Polling at 1.5s intervals via startPolling/pollSearchStatus
+
+  AC5:
+    description: Search can be cancelled mid-progress via POST /searches/{id}/cancel
+    status: PASS
+    evidence: |
+      - cancelSearch action calls POST /v1/searches/{id}/cancel
+      - Cancel button in SearchProgress component
+      - Partial results displayed after cancel
+
+  AC6:
+    description: Results display ranked leads with intent scores
+    status: PASS
+    evidence: |
+      - LeadCard shows intent_score with color coding
+      - Score breakdown tooltip on hover
+      - Leads sorted by intent_score descending
+
+  AC7:
+    description: Quality slider (0-1) controls speed vs quality trade-off
+    status: PASS
+    evidence: |
+      - QualitySlider component with 0-100 range (mapped to 0-1)
+      - Fast/Balanced/Thorough labels
+      - qualityLevel sent in startSearch API call
+
+  AC8:
+    description: Error states display user-friendly messages with retry option
+    status: PASS
+    evidence: |
+      - SearchResults shows error state with message
+      - Retry button calls handleRetry
+      - Error messages from API displayed
+
+best_practices:
+  - PASS: Clean component separation (header, override, progress, results, card, slider)
+  - PASS: Zustand store with proper state management
+  - PASS: Polling with cleanup on unmount
+  - PASS: Type-safe interfaces for Lead, SearchResult, ManualOverride
+  - PASS: CSV export functionality for leads
+  - PASS: Graceful handling when no active profile
+  - PASS: Logging throughout for observability
+
+recommendations:
+  - severity: LOW
+    issue: fetchWithAuth duplicated in client-store and search-store
+    suggestion: Extract to shared lib/api.ts utility
+  - severity: LOW
+    issue: No loading skeleton during initial profile fetch
+    suggestion: Add skeleton UI for better perceived performance
+  - severity: MEDIUM
+    issue: Polling continues on API errors
+    suggestion: Add retry limit and backoff strategy after N failures
+
+security:
+  - PASS: Auth token properly attached via fetchWithAuth
+  - PASS: No sensitive data exposed in logs
+  - PASS: XSS safe - using React's built-in escaping
+
+tested_files:
+  created:
+    - apps/web/app/(dashboard)/search/page.tsx
+    - apps/web/components/search/search-header.tsx
+    - apps/web/components/search/manual-override.tsx
+    - apps/web/components/search/search-progress.tsx
+    - apps/web/components/search/search-results.tsx
+    - apps/web/components/search/lead-card.tsx
+    - apps/web/components/search/quality-slider.tsx
+    - apps/web/components/search/index.ts
+    - apps/web/stores/search-store.ts
