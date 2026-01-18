@@ -1,0 +1,61 @@
+# Gitleaks Configuration for Vantage
+# https://github.com/gitleaks/gitleaks
+
+title = "Vantage Gitleaks Configuration"
+
+# Use the default rules from gitleaks
+[extend]
+useDefault = true
+
+# Allowlist - paths and patterns to ignore
+[allowlist]
+description = "Vantage allowlist"
+
+# Ignore common false positive paths
+paths = [
+    '''\.env\.example$''',
+    '''\.env\.local\.example$''',
+    '''pnpm-lock\.yaml$''',
+    '''package-lock\.json$''',
+    '''poetry\.lock$''',
+    '''uv\.lock$''',
+    '''\.git/''',
+    '''node_modules/''',
+    '''\.venv/''',
+    '''__pycache__/''',
+    '''\.next/''',
+    '''dist/''',
+    '''build/''',
+    '''coverage/''',
+    '''htmlcov/''',
+    '''\.pytest_cache/''',
+]
+
+# Ignore test files that may contain fake secrets
+regexTarget = "match"
+regexes = [
+    '''test[-_]?secret''',
+    '''fake[-_]?key''',
+    '''placeholder[-_]?key''',
+    '''example[-_]?token''',
+    '''test[-_]?anon[-_]?key''',
+]
+
+# Custom rules for project-specific patterns
+[[rules]]
+id = "vantage-test-credentials"
+description = "Test credentials used in CI/development"
+regex = '''test-secret-key-for-ci'''
+allowlist = { regexTarget = "match" }
+
+[[rules]]
+id = "supabase-placeholder"
+description = "Supabase placeholder keys"
+regex = '''placeholder-key|test-anon-key|test-key'''
+allowlist = { regexTarget = "match" }
+
+# Entropy-based detection settings
+[rules.entropy]
+enabled = true
+# High entropy strings that are likely secrets
+minEntropy = 4.5

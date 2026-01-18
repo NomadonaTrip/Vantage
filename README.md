@@ -254,6 +254,58 @@ The project enforces code quality through:
 - **Pre-commit hooks**: Automated checks before commit
 - **CI Pipeline**: Automated testing on pull requests
 
+### Pre-commit Hooks
+
+Pre-commit hooks run automatically on `git commit` via Husky:
+
+1. **Gitleaks** - Scans for secrets and blocks commits containing API keys, passwords, etc.
+2. **lint-staged** - Runs linting only on staged files:
+   - ESLint for JavaScript/TypeScript files
+   - Ruff for Python linting and formatting
+   - Bandit for Python security scanning
+   - Prettier for JSON/Markdown formatting
+
+#### Setup
+
+Hooks are installed automatically when you run `pnpm install`. If hooks don't run:
+
+```bash
+# Manually install hooks
+pnpm prepare
+```
+
+#### Skipping Hooks (Emergency Only)
+
+```bash
+# Skip pre-commit hooks (use sparingly!)
+git commit --no-verify -m "your message"
+```
+
+#### Running Hooks Manually
+
+```bash
+# Run lint-staged manually
+pnpm lint:staged
+
+# Run gitleaks manually
+gitleaks detect --source . --verbose
+```
+
+#### Installing Gitleaks
+
+Gitleaks must be installed separately:
+
+```bash
+# macOS
+brew install gitleaks
+
+# Linux
+# Download from https://github.com/gitleaks/gitleaks/releases
+
+# Windows
+# Download from https://github.com/gitleaks/gitleaks/releases
+```
+
 ## Architecture
 
 For detailed architecture documentation, see:

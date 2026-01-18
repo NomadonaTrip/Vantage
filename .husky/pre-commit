@@ -1,0 +1,45 @@
+# ============================================================================
+# Pre-commit Hook - Vantage
+# ============================================================================
+# This hook runs:
+# 1. Gitleaks - Secret detection (if installed)
+# 2. lint-staged - Linting on staged files only
+#
+# Skip with: git commit --no-verify
+# ============================================================================
+
+echo "🔍 Running pre-commit checks..."
+
+# ----------------------------------------------------------------------------
+# 1. Gitleaks - Secret Detection
+# ----------------------------------------------------------------------------
+echo "🔐 Checking for secrets with gitleaks..."
+
+if which gitleaks > /dev/null 2>&1; then
+    gitleaks protect --staged --verbose --redact
+    GITLEAKS_EXIT=$?
+    if [ $GITLEAKS_EXIT -ne 0 ]; then
+        echo "❌ Gitleaks found potential secrets! Commit blocked."
+        echo "   Review the findings above and remove any secrets."
+        echo "   If this is a false positive, add to .gitleaks.toml allowlist."
+        exit 1
+    fi
+    echo "✅ No secrets detected"
+else
+    echo "⚠️  Gitleaks not installed. Skipping secret detection."
+    echo "   Install with: brew install gitleaks (macOS) or download from GitHub"
+fi
+
+# ----------------------------------------------------------------------------
+# 2. lint-staged - Lint staged files
+# ----------------------------------------------------------------------------
+echo "🧹 Running lint-staged..."
+
+npx lint-staged
+LINT_EXIT=$?
+if [ $LINT_EXIT -ne 0 ]; then
+    echo "❌ Linting failed! Please fix the issues above."
+    exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"
