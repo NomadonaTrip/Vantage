@@ -10,7 +10,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth-store';
-import { useClientStore, useActiveProfile } from '@/stores/client-store';
+import { useClientStore } from '@/stores/client-store';
+import { ClientSwitcher } from '@/components/client/client-switcher';
 
 export default function DashboardLayout({
   children,
@@ -20,7 +21,6 @@ export default function DashboardLayout({
   const router = useRouter();
   const { user, isLoading: authLoading, signOut } = useAuthStore();
   const { fetchProfiles } = useClientStore();
-  const activeProfile = useActiveProfile();
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -92,16 +92,8 @@ export default function DashboardLayout({
 
             {/* Right side */}
             <div className="flex items-center space-x-4">
-              {/* Active Profile Indicator */}
-              {activeProfile && (
-                <Link
-                  href="/clients"
-                  className="flex items-center px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100"
-                >
-                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                  {activeProfile.company_name}
-                </Link>
-              )}
+              {/* Client Switcher */}
+              <ClientSwitcher variant="compact" />
 
               {/* User Menu */}
               <div className="flex items-center space-x-2">
