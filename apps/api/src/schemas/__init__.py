@@ -17,6 +17,14 @@ from src.schemas.conversation import (
     ExtractedProfile,
     MessageRole,
 )
+from src.schemas.voice import (
+    AudioFormat,
+    SynthesisRequest,
+    SynthesisResponse,
+    TranscriptionRequest,
+    TranscriptionResponse,
+    VoiceError,
+)
 
 __all__ = [
     # Client Profile
@@ -34,4 +42,11 @@ __all__ = [
     "ConversationStatus",
     "ExtractedProfile",
     "MessageRole",
+    # Voice
+    "AudioFormat",
+    "SynthesisRequest",
+    "SynthesisResponse",
+    "TranscriptionRequest",
+    "TranscriptionResponse",
+    "VoiceError",
 ]
