@@ -1,0 +1,115 @@
+# QA Gate: E5-S6 Leads Management Page
+# Generated: 2026-01-18
+# Reviewer: Quinn (QA Agent)
+
+story:
+  id: E5-S6
+  title: Leads Management Page
+  file: docs/stories/epic-5/5.6.leads-page.md
+
+gate_decision: PASS
+confidence: HIGH
+risk_level: LOW
+
+acceptance_criteria:
+  AC1:
+    description: Leads page displays at /leads route
+    status: PASS
+    evidence: |
+      - apps/web/app/(dashboard)/leads/page.tsx created
+      - Build output shows /leads route registered
+      - Dashboard layout has /leads nav link
+
+  AC2:
+    description: Leads displayed in filterable, sortable table with pagination
+    status: PASS
+    evidence: |
+      - LeadsTable component with sortable columns
+      - Pagination controls (Previous/Next, page info)
+      - Uses skip/limit API parameters
+
+  AC3:
+    description: Filter by status, source, date range
+    status: PASS
+    evidence: |
+      - LeadsFilters component with all filter types
+      - Status dropdown (All, New, Contacted, etc.)
+      - Source dropdown from available sources
+      - Date from/to pickers
+      - Search by name/company
+
+  AC4:
+    description: Update lead status (New → Contacted → Responded → Converted → Lost)
+    status: PASS
+    evidence: |
+      - StatusDropdown with all status options
+      - updateLeadStatus action with PATCH /v1/leads/{id}
+      - Optimistic update with rollback on failure
+
+  AC5:
+    description: Update lead accuracy (Verified, Bounced, Invalid, Wrong Person)
+    status: PASS
+    evidence: |
+      - AccuracyBadge with all accuracy options
+      - updateLeadAccuracy action with PATCH /v1/leads/{id}
+      - Visual indicators for each accuracy type
+
+  AC6:
+    description: Status changes recorded with timestamps (audit trail)
+    status: PASS
+    evidence: |
+      - StatusHistory component displays history entries
+      - Shows from_status → to_status transitions
+      - Displays timestamps and notes
+
+  AC7:
+    description: Leads scoped to active client profile
+    status: PASS
+    evidence: |
+      - fetchLeads requires clientProfileId parameter
+      - client_profile_id passed to API
+      - Warning shown when no active profile
+
+  AC8:
+    description: Pagination controls allow navigating large result sets
+    status: PASS
+    evidence: |
+      - Previous/Next buttons with disabled states
+      - Page X of Y display
+      - Showing X to Y of Z leads display
+
+best_practices:
+  - PASS: Clean component separation (table, filters, row, dropdowns)
+  - PASS: Zustand store with proper state management
+  - PASS: Optimistic updates with rollback on failure
+  - PASS: Type-safe interfaces (Lead, LeadStatus, LeadAccuracy)
+  - PASS: Graceful handling when no active profile
+  - PASS: Logging throughout for observability
+
+recommendations:
+  - severity: LOW
+    issue: fetchWithAuth duplicated across stores
+    suggestion: Extract to shared lib/api.ts utility
+  - severity: LOW
+    issue: No debounce on search input
+    suggestion: Add debounce (300ms) for search queries
+  - severity: MEDIUM
+    issue: availableSources derived from current page only
+    suggestion: Fetch distinct sources from API separately
+
+security:
+  - PASS: Auth token properly attached via fetchWithAuth
+  - PASS: No sensitive data exposed in logs
+  - PASS: XSS safe - using React's built-in escaping
+
+tested_files:
+  created:
+    - apps/web/app/(dashboard)/leads/page.tsx
+    - apps/web/components/leads/leads-table.tsx
+    - apps/web/components/leads/leads-filters.tsx
+    - apps/web/components/leads/lead-row.tsx
+    - apps/web/components/leads/status-dropdown.tsx
+    - apps/web/components/leads/accuracy-badge.tsx
+    - apps/web/components/leads/status-history.tsx
+    - apps/web/components/leads/index.ts
+    - apps/web/stores/leads-store.ts
