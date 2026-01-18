@@ -9,12 +9,11 @@ from pydantic import BaseModel, Field
 class ScoringWeights(BaseModel):
     """Custom scoring weights for lead scoring."""
 
-    source_hierarchy: float = Field(default=1.0, ge=0, le=1)
-    keywords: float = Field(default=1.0, ge=0, le=1)
-    company_size: float = Field(default=1.0, ge=0, le=1)
-    timing_recency: float = Field(default=1.0, ge=0, le=1)
-    budget_signals: float = Field(default=1.0, ge=0, le=1)
-    industry_multipliers: float = Field(default=1.0, ge=0, le=1)
+    source_weight: float = Field(default=0.20, ge=0, le=1, description="Weight for source hierarchy score")
+    keyword_weight: float = Field(default=0.25, ge=0, le=1, description="Weight for keyword match score")
+    company_size_weight: float = Field(default=0.15, ge=0, le=1, description="Weight for company size fit")
+    timing_weight: float = Field(default=0.15, ge=0, le=1, description="Weight for timing/recency")
+    budget_weight: float = Field(default=0.25, ge=0, le=1, description="Weight for budget signals")
 
 
 class ClientProfileBase(BaseModel):
