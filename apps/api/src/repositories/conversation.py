@@ -166,6 +166,72 @@ class ConversationRepository:
             logger.exception("status_update_failed", conversation_id=conversation_id, error=str(e))
             raise
 
+    async def list_by_profile(
+        self,
+        client_profile_id: str,
+        user_id: str,
+    ) -> list[Conversation]:
+        """
+        List all conversations for a client profile.
+
+        Args:
+            client_profile_id: Client profile UUID.
+            user_id: User UUID (for authorization).
+
+        Returns:
+            List of conversations.
+        """
+        try:
+            result = (
+                self.supabase.table(self.table)
+                .select("*")
+                .eq("client_profile_id", client_profile_id)
+                .eq("user_id", user_id)
+                .order("started_at", desc=True)
+                .execute()
+            )
+
+            conversations = [self._to_conversation(row) for row in result.data]
+            logger.info(
+                "conversations_listed",
+                client_profile_id=client_profile_id,
+                count=len(conversations),
+            )
+            return conversations
+        except Exception as e:
+            logger.exception(
+                "conversations_list_failed",
+                client_profile_id=client_profile_id,
+                error=str(e),
+            )
+            raise
+
+    async def list_by_user(self, user_id: str) -> list[Conversation]:
+        """
+        List all conversations for a user.
+
+        Args:
+            user_id: User UUID.
+
+        Returns:
+            List of conversations.
+        """
+        try:
+            result = (
+                self.supabase.table(self.table)
+                .select("*")
+                .eq("user_id", user_id)
+                .order("started_at", desc=True)
+                .execute()
+            )
+
+            conversations = [self._to_conversation(row) for row in result.data]
+            logger.info("conversations_listed_by_user", user_id=user_id, count=len(conversations))
+            return conversations
+        except Exception as e:
+            logger.exception("conversations_list_by_user_failed", user_id=user_id, error=str(e))
+            raise
+
     async def link_to_user(
         self,
         conversation_id: str,
