@@ -1,5 +1,8 @@
 # Vantage
 
+[![CI](https://github.com/NomadonaTrip/Vantage/actions/workflows/ci.yml/badge.svg)](https://github.com/NomadonaTrip/Vantage/actions/workflows/ci.yml)
+[![Security](https://github.com/NomadonaTrip/Vantage/actions/workflows/security.yml/badge.svg)](https://github.com/NomadonaTrip/Vantage/actions/workflows/security.yml)
+
 **Intelligent Lead Generation Platform**
 
 Vantage is an AI-powered lead generation platform that helps agencies find and qualify potential clients through intelligent search, scoring, and conversation.
