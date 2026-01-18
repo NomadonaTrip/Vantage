@@ -19,7 +19,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, isLoading: authLoading, signOut } = useAuthStore();
+  const { user, isLoading: authLoading, logout } = useAuthStore();
   const { fetchProfiles } = useClientStore();
 
   // Redirect if not authenticated
@@ -99,7 +99,7 @@ export default function DashboardLayout({
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-500">{user.email}</span>
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => logout()}
                   className="text-sm text-gray-500 hover:text-gray-700"
                 >
                   Sign out

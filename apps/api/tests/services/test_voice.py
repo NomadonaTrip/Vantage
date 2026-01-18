@@ -161,10 +161,11 @@ class TestVoiceService:
             language="en",
         )
 
-        with patch.object(
-            service, "whisper", MagicMock(transcribe=AsyncMock(return_value=mock_response))
-        ):
-            result = await service.transcribe(b"audio", "wav")
+        mock_whisper = MagicMock()
+        mock_whisper.transcribe = AsyncMock(return_value=mock_response)
+        service._whisper = mock_whisper
+
+        result = await service.transcribe(b"audio", "wav")
 
         assert result.text == "Hello"
         assert result.confidence == 0.95
@@ -176,14 +177,13 @@ class TestVoiceService:
 
         mock_audio = create_mock_wav_audio()
 
-        with patch.object(
-            service, "piper", MagicMock(
-                synthesize=AsyncMock(return_value=mock_audio),
-                _estimate_duration=MagicMock(return_value=1.5),
-            )
-        ):
-            request = SynthesisRequest(text="Hello world")
-            audio, metadata = await service.synthesize(request)
+        mock_piper = MagicMock()
+        mock_piper.synthesize = AsyncMock(return_value=mock_audio)
+        mock_piper._estimate_duration = MagicMock(return_value=1.5)
+        service._piper = mock_piper
+
+        request = SynthesisRequest(text="Hello world")
+        audio, metadata = await service.synthesize(request)
 
         assert len(audio) > 0
         assert metadata.text_length == len(request.text)
@@ -228,11 +228,12 @@ class TestVoiceService:
             yield b"chunk1"
             yield b"chunk2"
 
-        with patch.object(
-            service, "piper", MagicMock(synthesize_stream=mock_stream)
-        ):
-            request = SynthesisRequest(text="Hello world")
-            chunks = [chunk async for chunk in service.synthesize_stream(request)]
+        mock_piper = MagicMock()
+        mock_piper.synthesize_stream = mock_stream
+        service._piper = mock_piper
+
+        request = SynthesisRequest(text="Hello world")
+        chunks = [chunk async for chunk in service.synthesize_stream(request)]
 
         assert len(chunks) == 2
         assert chunks[0] == b"chunk1"

@@ -6,7 +6,7 @@ import { toHaveNoViolations } from 'jest-axe';
 expect.extend(toHaveNoViolations);
 
 // Suppress React 18 act() warnings in tests
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+(globalThis as unknown as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
 // Mock IntersectionObserver for components that use it
 class MockIntersectionObserver {

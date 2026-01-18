@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useClientStore, useClientLoading } from '@/stores/client-store';
 import { ClientForm } from '@/components/client/client-form';
-import { ClientProfileCreate } from '@/stores/client-store';
+import { ClientProfileCreate, ClientProfileUpdate } from '@/stores/client-store';
 import { logger } from '@/lib/logger';
 
 export default function NewClientPage() {
@@ -23,10 +23,12 @@ export default function NewClientPage() {
     logger.info({ event: 'page_view', page: 'clients/new' });
   }, []);
 
-  const handleSubmit = async (data: ClientProfileCreate) => {
-    logger.info({ event: 'create_client_submit', company: data.company_name });
+  const handleSubmit = async (data: ClientProfileCreate | ClientProfileUpdate) => {
+    // For new clients, form always provides required fields
+    const createData = data as ClientProfileCreate;
+    logger.info({ event: 'create_client_submit', company: createData.company_name });
 
-    const profile = await createProfile(data);
+    const profile = await createProfile(createData);
 
     if (profile) {
       logger.info({ event: 'create_client_success', profileId: profile.id });
